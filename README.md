@@ -45,5 +45,3 @@ DB_CONFIG = {
 
 2. Certifique-se de aplicar as migrações do diretório `migrations`..
 3. Inicie o frontend com `npm run dev` (porta padrão `5174`).
-
-Os scripts sobreescrevem o arquivo `src/integrations/supabase/types.ts`.
