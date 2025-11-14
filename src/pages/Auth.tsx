@@ -28,7 +28,7 @@ const Auth = () => {
       await authLogin(email, password);
       const me = await authMe();
       const role = (me?.role || "").toUpperCase();
-      if (role === "ADMIN") navigate("/admin/dashboard");
+      if (role === "ADMIN") navigate("/admin");
       else if (role === "PRODUTOR") navigate("/produtor/dashboard");
       else if (role === "CLIENTE") navigate("/cliente/dashboard");
       else navigate("/");

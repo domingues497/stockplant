@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import ProtectedByRole from "@/routes/ProtectedByRole";
 import ProdutorDashboard from "@/pages/Produtor/Dashboard";
+import Admin from "./pages/Admin";
 import Fazendas from "@/pages/Produtor/Fazendas";
 import Cultivos from "@/pages/Produtor/Cultivos";
 import Estoque from "@/pages/Produtor/Estoque";
@@ -62,16 +63,7 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <ProtectedByRole allow={["PRODUTOR"]}>
-                  <ProdutorDashboard />
-                </ProtectedByRole>
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<Navigate to="/auth" replace />} />
           <Route
             path="/produtor/dashboard"
             element={
@@ -190,3 +182,11 @@ const App = () => (
 );
 
 export default App;
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />

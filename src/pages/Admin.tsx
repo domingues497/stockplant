@@ -12,19 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { adminCreateUser, adminListUsers, type UserRow } from "@/services/api/admin";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { ImportCultivares } from "@/components/admin/ImportCultivares";
-import { ImportFertilizantes } from "@/components/admin/ImportFertilizantes";
-import { ImportDefensivos } from "@/components/admin/ImportDefensivos";
-import { ImportConsultores } from "@/components/admin/ImportConsultores";
-import { ImportProdutores } from "@/components/admin/ImportProdutores";
-import { ImportFazendas } from "@/components/admin/ImportFazendas";
-import { ImportSafras } from "@/components/admin/ImportSafras";
-import { ReplicarSafras } from "@/components/admin/ReplicarSafras";
-import { ImportTratamentos } from "@/components/admin/ImportTratamentos";
-import { ImportCalendario } from "@/components/admin/ImportCalendario";
-import { ImportJustificativas } from "@/components/admin/ImportJustificativas";
-import { ImportCalendarioAplicacoes } from "@/components/admin/ImportCalendarioAplicacoes";
-import { HistoricoImportacoes } from "@/components/admin/HistoricoImportacoes";
+// módulos de importação removidos
 
 const ADMIN_PASSWORD = "Co0p@gr!#0la";
 
@@ -107,70 +95,12 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs defaultValue={(searchParams.get("tab") || "cultivares") as string} className="w-full">
-        <TabsList className="grid w-full grid-cols-12">
-          <TabsTrigger value="cultivares">Cultivares</TabsTrigger>
-          <TabsTrigger value="fertilizantes">Fertilizantes</TabsTrigger>
-          <TabsTrigger value="defensivos">Defensivos</TabsTrigger>
-          <TabsTrigger value="calendario">Calendário</TabsTrigger>
-          <TabsTrigger value="consultores">Consultores</TabsTrigger>
-          <TabsTrigger value="produtores">Produtores</TabsTrigger>
-          <TabsTrigger value="fazendas">Fazendas</TabsTrigger>
-          <TabsTrigger value="safras">Safras</TabsTrigger>
-          <TabsTrigger value="tratamentos">Tratamentos</TabsTrigger>
-          <TabsTrigger value="justificativas">Justificativas</TabsTrigger>
-          <TabsTrigger value="replicar">Replicar</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
+      <Tabs defaultValue={"usuarios"} className="w-full">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="usuarios">Usuários</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="cultivares">
-          <ImportCultivares />
-        </TabsContent>
-
-        <TabsContent value="fertilizantes">
-          <ImportFertilizantes />
-        </TabsContent>
-
-        <TabsContent value="defensivos">
-          <ImportDefensivos />
-        </TabsContent>
-
-        <TabsContent value="calendario">
-          <ImportCalendarioAplicacoes />
-        </TabsContent>
-
-        <TabsContent value="consultores">
-          <ImportConsultores />
-        </TabsContent>
-
-        <TabsContent value="produtores">
-          <ImportProdutores />
-        </TabsContent>
-
-        <TabsContent value="fazendas">
-          <ImportFazendas />
-        </TabsContent>
-
-        <TabsContent value="safras">
-          <ImportSafras />
-        </TabsContent>
-
-        <TabsContent value="tratamentos">
-          <ImportTratamentos />
-        </TabsContent>
-
-        <TabsContent value="justificativas">
-          <ImportJustificativas />
-        </TabsContent>
-
-        <TabsContent value="replicar">
-          <ReplicarSafras />
-        </TabsContent>
-
-        <TabsContent value="historico">
-          <HistoricoImportacoes />
-        </TabsContent>
+        
 
         <TabsContent value="usuarios">
           <Card>
