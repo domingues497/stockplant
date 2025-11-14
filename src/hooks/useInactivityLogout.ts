@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { authLogout } from '@/services/api/auth';
 import { useToast } from '@/hooks/use-toast';
 
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutos em milissegundos
-const WARNING_TIMEOUT = 4 * 60 * 1000; // Aviso 1 minuto antes
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
+const WARNING_TIMEOUT = 4 * 60 * 1000;
 
 export const useInactivityLogout = () => {
   const { toast } = useToast();
@@ -25,8 +25,7 @@ export const useInactivityLogout = () => {
       variant: "destructive",
     });
     
-    await supabase.auth.signOut();
-    window.location.href = '/auth';
+    authLogout();
   };
 
   const resetTimer = () => {

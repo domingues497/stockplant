@@ -1,29 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { authMe } from "@/services/api/auth";
 
 export const useAdminRole = () => {
   return useQuery({
     queryKey: ["admin-role"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      try {
+        const me = await authMe();
+        const role = (me?.role || "").toString().toUpperCase();
+        return { isAdmin: role === "ADMIN" };
+      } catch {
         return { isAdmin: false };
       }
-
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error checking admin role:", error);
-        return { isAdmin: false };
-      }
-
-      return { isAdmin: !!data };
     },
   });
 };

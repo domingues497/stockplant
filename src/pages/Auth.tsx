@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sprout } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { authLogin, authMe } from "@/services/api/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
@@ -18,86 +18,22 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Permitir cadastro apenas se email consta na base de consultores
-    const { data: consultantRows, error: consultError } = await supabase
-      .from("consultores")
-      .select("email")
-      .eq("email", email.toLowerCase())
-      .limit(1);
-
-    if (consultError) {
-      toast({ title: "Erro ao verificar consultor", description: consultError.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    if (!consultantRows || consultantRows.length === 0) {
-      toast({ title: "Cadastro bloqueado", description: "Email não encontrado na base de consultores.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`
-      }
-    });
-
-    if (error) {
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Conta criada!",
-        description: "Você já pode fazer login."
-      });
-    }
-    setLoading(false);
+    toast({ title: "Cadastro via Admin", description: "Solicite ao Admin a criação de conta.", variant: "destructive" });
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // Permitir login apenas para emails de consultores cadastrados
-    const { data: consultantRows, error: consultError } = await supabase
-      .from("consultores")
-      .select("email")
-      .eq("email", email.toLowerCase())
-      .limit(1);
-
-    if (consultError) {
-      toast({ title: "Erro ao verificar consultor", description: consultError.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    if (!consultantRows || consultantRows.length === 0) {
-      toast({ title: "Login bloqueado", description: "Email não encontrado na base de consultores.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      toast({
-        title: "Erro ao fazer login",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      navigate("/");
+    try {
+      await authLogin(email, password);
+      const me = await authMe();
+      const role = (me?.role || "").toUpperCase();
+      if (role === "ADMIN") navigate("/admin/dashboard");
+      else if (role === "PRODUTOR") navigate("/produtor/dashboard");
+      else if (role === "CLIENTE") navigate("/cliente/dashboard");
+      else navigate("/");
+    } catch (err: any) {
+      toast({ title: "Erro ao fazer login", description: err.message || "Falha de autenticação", variant: "destructive" });
     }
     setLoading(false);
   };
@@ -122,11 +58,11 @@ const Auth = () => {
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email">Usuário</Label>
                 <Input
                   id="signin-email"
-                  type="email"
-                  placeholder="seu@email.com"
+                  type="text"
+                  placeholder="seu_usuario"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
