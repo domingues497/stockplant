@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ShoppingCart, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
@@ -15,10 +16,17 @@ export default function Marketplace() {
   const navigate = useNavigate();
   const { items, add } = useCart();
   const [searchTerm, setSearchTerm] = useState("");
+  const [cultura, setCultura] = useState<string>("");
+
+  const { data: ofertasAll = [] } = useQuery<OfertaPublica[]>({
+    queryKey: ["public_ofertas_all"],
+    queryFn: () => listPublicOfertas(),
+    refetchOnWindowFocus: false,
+  });
 
   const { data: ofertas = [], isLoading } = useQuery<OfertaPublica[]>({
-    queryKey: ["public_ofertas", searchTerm],
-    queryFn: () => listPublicOfertas(searchTerm ? { q: searchTerm } : undefined),
+    queryKey: ["public_ofertas", cultura, searchTerm],
+    queryFn: () => listPublicOfertas({ cultura: cultura || undefined, q: searchTerm || undefined }),
     refetchOnWindowFocus: false,
   });
 
@@ -45,14 +53,29 @@ export default function Marketplace() {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Buscar ofertas (cultura, origem...)"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="relative sm:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar ofertas (cultura, origem...)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div>
+            <Select value={cultura || "__all__"} onValueChange={(v) => setCultura(v === "__all__" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as culturas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todas</SelectItem>
+                {Array.from(new Set(ofertasAll.map((o) => o.cultura))).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading && (
