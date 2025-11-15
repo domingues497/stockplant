@@ -1,7 +1,11 @@
 const DEFAULT_BASE = typeof window !== "undefined"
   ? `${window.location.protocol}//${window.location.hostname}:8000`
   : "http://127.0.0.1:8000";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE;
+let _envBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
+if (_envBase && /\/api\/?$/.test(_envBase)) {
+  _envBase = _envBase.replace(/\/api\/?$/, "");
+}
+const BASE_URL = _envBase || DEFAULT_BASE;
 
 function buildUrl(path: string) {
   try {
