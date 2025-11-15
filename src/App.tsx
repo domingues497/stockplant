@@ -17,6 +17,7 @@ import Ofertas from "@/pages/Produtor/Ofertas";
 import RelatoriosProdutor from "@/pages/Produtor/Relatorios";
 import ClienteDashboard from "@/pages/Cliente/Dashboard";
 import Marketplace from "@/pages/Cliente/Marketplace";
+import OfertasLanding from "@/pages/Cliente/OfertasLanding";
 import Carrinho from "@/pages/Cliente/Carrinho";
 import Compra from "@/pages/Cliente/Compra";
 import Historico from "@/pages/Cliente/Historico";
@@ -62,6 +63,7 @@ const App = () => (
       >
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/ofertas" element={<OfertasLanding />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/auth" replace />} />
           <Route
