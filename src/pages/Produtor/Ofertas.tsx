@@ -10,11 +10,34 @@ import { useToast } from "@/hooks/use-toast";
 import { listCultivos, type Cultivo } from "@/services/api/cultivos";
 import { listEstoque } from "@/services/api/estoque";
 import { Link } from "react-router-dom";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { apiFetch } from "@/services/api/client";
 
 export default function Ofertas() {
   const { toast } = useToast();
   const { data: estoque } = useQuery({ queryKey: ["estoque"], queryFn: () => listEstoque(), refetchOnWindowFocus: false });
   const { data: cultivos } = useQuery<Cultivo[]>({ queryKey: ["cultivos"], queryFn: () => listCultivos(), refetchOnWindowFocus: false });
+
+  type Oferta = { id: number; cultura: string; variedade?: string; quantidade_kg: number; preco_kg: number; criado_em?: string };
+  const { data: ofertas = [], isLoading: ofertasLoading } = useQuery<Oferta[]>({
+    queryKey: ["ofertas_produtor"],
+    queryFn: async () => {
+      try {
+        const rows = await apiFetch("/api/produtor/ofertas/");
+        return (rows as any[]).map((r) => ({
+          id: Number(r.id),
+          cultura: String(r.cultura || r.cultivo || ""),
+          variedade: r.variedade ?? r.cultivar ?? "",
+          quantidade_kg: Number(r.quantidade_kg ?? r.quantidade ?? 0),
+          preco_kg: Number(r.preco_kg ?? r.preco ?? 0),
+          criado_em: r.criado_em,
+        }));
+      } catch (e) {
+        return [] as Oferta[];
+      }
+    },
+    refetchOnWindowFocus: false,
+  });
 
   const saldo = estoque?.saldo_total_kg ?? 0;
   const saldoPorCultivo = useMemo(() => {
@@ -27,6 +50,18 @@ export default function Ofertas() {
       map.set(id, prev + Number(e.quantidade_kg || 0));
     }
     return map;
+  }, [estoque]);
+
+  const saldoPorCultura = useMemo(() => {
+    const map = new Map<string, number>();
+    const entradas = estoque?.entradas || [];
+    for (const e of entradas) {
+      const key = String(e.cultivo || "");
+      if (!key) continue;
+      const prev = map.get(key) || 0;
+      map.set(key, prev + Number(e.quantidade_kg || 0));
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [estoque]);
 
   const [open, setOpen] = useState(false);
@@ -95,6 +130,17 @@ export default function Ofertas() {
            
           </div>
         </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {saldoPorCultura.map(([culturaNome, kg]) => (
+            <Card key={culturaNome} className="p-3">
+              <div className="text-sm text-muted-foreground">{culturaNome}</div>
+              <div className="text-lg font-semibold">{kg.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</div>
+            </Card>
+          ))}
+          {saldoPorCultura.length === 0 && (
+            <Card className="p-3"><div className="text-muted-foreground">Sem entradas no estoque</div></Card>
+          )}
+        </div>
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -150,4 +196,40 @@ export default function Ofertas() {
     </div>
   );
 }
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">Minhas ofertas</h2>
+          <div className="text-sm text-muted-foreground">{ofertasLoading ? "Carregando..." : `${ofertas.length} oferta(s)`}</div>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cultura</TableHead>
+              <TableHead>Variedade</TableHead>
+              <TableHead className="text-right">Quantidade (kg)</TableHead>
+              <TableHead className="text-right">Preço (R$/kg)</TableHead>
+              <TableHead>Criado em</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ofertas.map((o) => (
+              <TableRow key={o.id}>
+                <TableCell>{o.cultura}</TableCell>
+                <TableCell>{o.variedade || "-"}</TableCell>
+                <TableCell className="text-right">{o.quantidade_kg.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{o.preco_kg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                <TableCell>{o.criado_em ? new Date(o.criado_em).toLocaleDateString() : ""}</TableCell>
+              </TableRow>
+            ))}
+            {!ofertasLoading && ofertas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div className="text-muted-foreground">Nenhuma oferta cadastrada</div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+          <TableCaption>Listagem de ofertas do produtor</TableCaption>
+        </Table>
+      </Card>
 
