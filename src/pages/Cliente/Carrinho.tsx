@@ -13,6 +13,12 @@ export default function Carrinho() {
   const total = items.reduce((acc, it) => acc + it.quantidade * it.preco, 0);
 
   const handleCheckout = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (!token) {
+      toast({ title: "Login necessário", description: "Entre na sua conta para finalizar a compra.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
     if (items.length === 0) {
       toast({
         title: "Carrinho vazio",
@@ -71,6 +77,9 @@ export default function Carrinho() {
             <h2 className="text-2xl font-semibold mb-2">Seu carrinho está vazio</h2>
             <p className="text-muted-foreground mb-6">Adicione produtos ao carrinho para continuar</p>
             <Button onClick={() => navigate("/cliente/marketplace")}>Ir para o Marketplace</Button>
+            <div className="mt-4">
+              <Button variant="outline" onClick={() => navigate("/auth")}>Login</Button>
+            </div>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-6">

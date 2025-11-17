@@ -30,7 +30,7 @@ const Auth = () => {
       const role = (me?.role || "").toUpperCase();
       if (role === "ADMIN") navigate("/admin?tab=usuarios");
       else if (role === "PRODUTOR") navigate("/produtor/dashboard");
-      else if (role === "CLIENTE") navigate("/cliente/dashboard");
+      else if (role === "CLIENTE") navigate("/");
       else navigate("/");
     } catch (err: any) {
       toast({ title: "Erro ao fazer login", description: err.message || "Falha de autenticação", variant: "destructive" });

@@ -157,16 +157,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/cliente/carrinho"
-            element={
-              <ProtectedRoute>
-                <ProtectedByRole allow={["CLIENTE"]}>
-                  <Carrinho />
-                </ProtectedByRole>
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/cliente/carrinho" element={<Carrinho />} />
           <Route
             path="/cliente/compra"
             element={
