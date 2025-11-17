@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { authLogout } from "@/services/api/auth";
 
 export default function Carrinho() {
   const navigate = useNavigate();
@@ -60,12 +61,15 @@ export default function Carrinho() {
                 </p>
               </div>
             </div>
-            {items.length > 0 && (
-              <Button variant="destructive" onClick={handleClearCart}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Limpar Carrinho
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {items.length > 0 && (
+                <Button variant="destructive" onClick={handleClearCart}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar Carrinho
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => authLogout()}>Logout</Button>
+            </div>
           </div>
         </div>
       </header>

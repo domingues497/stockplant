@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listPublicOfertas, type OfertaPublica } from "@/services/api/marketplace";
+import { authLogout } from "@/services/api/auth";
 
  
 
@@ -44,6 +45,9 @@ export default function Marketplace() {
             <div className="flex items-center gap-2">
             <Button onClick={() => navigate("/auth")} variant="default">
               Login
+            </Button>
+            <Button onClick={() => authLogout()} variant="outline">
+              Logout
             </Button>
             <Button onClick={() => navigate("/cliente/carrinho")} variant="outline" className="relative">
               <ShoppingCart className="w-5 h-5 mr-2" />

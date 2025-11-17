@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { authLogout } from '@/services/api/auth';
 import { useToast } from '@/hooks/use-toast';
 
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
-const WARNING_TIMEOUT = 4 * 60 * 1000;
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000;
+const WARNING_TIMEOUT = 9 * 60 * 1000;
 
 export const useInactivityLogout = () => {
   const { toast } = useToast();

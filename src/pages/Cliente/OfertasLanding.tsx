@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { listPublicOfertas, type OfertaPublica } from "@/services/api/marketplace";
+import { authLogout } from "@/services/api/auth";
 
 type Oferta = OfertaPublica;
 
@@ -37,8 +38,13 @@ export default function OfertasLanding() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Ofertas</h1>
-        <div className="hidden sm:block text-sm text-muted-foreground">Consulte e filtre ofertas disponíveis</div>
+        <div>
+          <h1 className="text-2xl font-bold">Ofertas</h1>
+          <div className="hidden sm:block text-sm text-muted-foreground">Consulte e filtre ofertas disponíveis</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => authLogout()}>Logout</Button>
+        </div>
       </div>
 
       <Card className="p-4">

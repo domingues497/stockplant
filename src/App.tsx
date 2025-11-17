@@ -52,18 +52,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <CartProvider>
-        <BrowserRouter
-          future={{
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <Routes>
+const App = () => {
+  useInactivityLogout();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <CartProvider>
+          <BrowserRouter
+            future={{
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route
             path="/ofertas"
@@ -188,12 +190,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -12,6 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { adminCreateUser, adminListUsers, type UserRow } from "@/services/api/admin";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
+import { authLogout } from "@/services/api/auth";
 // módulos de importação removidos
 
 const ADMIN_PASSWORD = "Co0p@gr!#0la";
@@ -92,6 +93,7 @@ export default function Admin() {
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate("/")}>Voltar ao Dashboard</Button>
           <Button onClick={() => navigate("/admin?tab=usuarios")}>Gerenciar Usuários</Button>
+          <Button variant="destructive" onClick={() => authLogout()}>Logout</Button>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import PieChart from "@/components/Charts/PieChart";
 import BarChart from "@/components/Charts/BarChart";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { authLogout } from "@/services/api/auth";
 
 const ProdutorDashboard = () => {
   const { data, isLoading } = useQuery({ queryKey: ["produtor-dashboard"], queryFn: getProdutorDashboard });
@@ -20,6 +21,7 @@ const ProdutorDashboard = () => {
           <Link to="/produtor/estoque"><Button variant="outline">Estoque</Button></Link>
           <Link to="/produtor/ofertas"><Button variant="outline">Ofertas</Button></Link>
           <Link to="/produtor/relatorios"><Button variant="outline">Relatórios</Button></Link>
+          <Button variant="destructive" onClick={() => authLogout()}>Logout</Button>
         </div>
       </div>
 
