@@ -143,6 +143,43 @@ export default function Ofertas() {
         </div>
       </Card>
 
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">Minhas ofertas</h2>
+          <div className="text-sm text-muted-foreground">{ofertasLoading ? "Carregando..." : `${ofertas.length} oferta(s)`}</div>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cultura</TableHead>
+              <TableHead>Variedade</TableHead>
+              <TableHead className="text-right">Quantidade (kg)</TableHead>
+              <TableHead className="text-right">Preço (R$/kg)</TableHead>
+              <TableHead>Criado em</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ofertas.map((o) => (
+              <TableRow key={o.id}>
+                <TableCell>{o.cultura}</TableCell>
+                <TableCell>{o.variedade || "-"}</TableCell>
+                <TableCell className="text-right">{o.quantidade_kg.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{o.preco_kg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                <TableCell>{o.criado_em ? new Date(o.criado_em).toLocaleDateString() : ""}</TableCell>
+              </TableRow>
+            ))}
+            {!ofertasLoading && ofertas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div className="text-muted-foreground">Nenhuma oferta cadastrada</div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+          <TableCaption>Listagem de ofertas do produtor</TableCaption>
+        </Table>
+      </Card>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -196,40 +233,4 @@ export default function Ofertas() {
     </div>
   );
 }
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Minhas ofertas</h2>
-          <div className="text-sm text-muted-foreground">{ofertasLoading ? "Carregando..." : `${ofertas.length} oferta(s)`}</div>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cultura</TableHead>
-              <TableHead>Variedade</TableHead>
-              <TableHead className="text-right">Quantidade (kg)</TableHead>
-              <TableHead className="text-right">Preço (R$/kg)</TableHead>
-              <TableHead>Criado em</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ofertas.map((o) => (
-              <TableRow key={o.id}>
-                <TableCell>{o.cultura}</TableCell>
-                <TableCell>{o.variedade || "-"}</TableCell>
-                <TableCell className="text-right">{o.quantidade_kg.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{o.preco_kg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                <TableCell>{o.criado_em ? new Date(o.criado_em).toLocaleDateString() : ""}</TableCell>
-              </TableRow>
-            ))}
-            {!ofertasLoading && ofertas.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <div className="text-muted-foreground">Nenhuma oferta cadastrada</div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-          <TableCaption>Listagem de ofertas do produtor</TableCaption>
-        </Table>
-      </Card>
 
