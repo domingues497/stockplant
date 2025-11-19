@@ -33,7 +33,7 @@
   - `POST /api/estoque/entrada/` — lançar entrada de estoque (`colheita` ou `ajuste`)
 - Marketplace (`/api/marketplace/`)
   - `GET /api/marketplace/ofertas/` — ofertas públicas
-  - `POST /api/marketplace/ofertas/` — criar oferta (autenticado produtor; aceita `cultivo_id`)
+  - `GET/POST/PATCH /api/marketplace/minhas-ofertas/` — criar/editar/listar ofertas do produtor
 
 ## APIs externas
 - Mapas
@@ -44,6 +44,18 @@
 - CEP (endereços)
   - ViaCEP: `https://viacep.com.br/ws/{cep}/json/`
   - API CEP: `https://cdn.apicep.com/file/apicep/{cep}.json`
+
+### Sigma ABC
+- Endpoint: `GET /api/integrations/sigmaabc/logar/`
+- Parâmetros de query:
+  - `identificador` — id do usuário no Sigma (ex.: `10988`)
+  - `categoria` — código de categoria (ex.: `1`)
+  - `exp` — tempo de expiração do token em segundos (ex.: `3600`)
+  - `redirect` — `1/true` para responder com redirecionamento HTTP 302
+  - `format` — `text` para URL em texto puro, `html` para link clicável, padrão JSON `{ url, payload }`
+- Segurança: token assinado em HS256 usando `SIGMAABC_SECRET` definido via variável de ambiente
+- Exemplo (texto): `GET /api/integrations/sigmaabc/logar/?identificador=10988&categoria=1&exp=3600&format=text`
+- Exemplo (redirect): `GET /api/integrations/sigmaabc/logar/?identificador=10988&categoria=1&redirect=1`
 
 ## Regras de negócio
 - Cultura como fonte única: `CulturaInfo` define nome e imagem; `Cultivar` referencia via `cultura_info` e sincroniza `cultura` com `CulturaInfo.nome`.
@@ -86,3 +98,4 @@
 - `ALLOWED_HOSTS` — ex.: `localhost,127.0.0.1`
 - `DATABASE_URL` — conexão PostgreSQL (opcional)
 - `DB_SCHEMA` — schema PostgreSQL (opcional)
+- `SIGMAABC_SECRET` — segredo usado para assinar o token de login no Sigma ABC
