@@ -106,9 +106,11 @@ export default function Marketplace() {
             const qtdSc = o.quantidade_kg / kgPorSaca;
             return (
               <Card key={o.id} className="p-0 overflow-hidden">
-                <div className="h-36 w-full bg-muted">
-                  <img src={"https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800"} alt={o.cultura} className="w-full h-full object-cover" />
-                </div>
+                {(
+                  <div className="h-36 w-full bg-muted">
+                    <img src={o.imagem_url || "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800"} alt={o.cultura} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="font-semibold">

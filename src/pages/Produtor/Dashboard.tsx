@@ -9,7 +9,13 @@ import { Link } from "react-router-dom";
 import { authLogout } from "@/services/api/auth";
 
 const ProdutorDashboard = () => {
-  const { data, isLoading } = useQuery({ queryKey: ["produtor-dashboard"], queryFn: getProdutorDashboard });
+  const { data, isLoading } = useQuery({
+    queryKey: ["produtor-dashboard"],
+    queryFn: getProdutorDashboard,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: "always",
+  });
 
   return (
     <div className="p-4 space-y-6">

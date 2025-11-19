@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import models
 from .models import Fazenda, Cultivo, Cultivar, CulturaInfo
+from stockapp.models import StockEntry
+from marketplace.models import Oferta
 from .serializers import FazendaSerializer, CultivoSerializer, CultivarSerializer, CulturaInfoSerializer
 from .permissions import IsProdutor, IsOwnerOrReadOnly, IsAdmin
 from datetime import date, timedelta
@@ -80,15 +82,26 @@ class ProdutorDashboardView(APIView):
         evolucao_x = sorted(meses.keys())
         evolucao_y = [meses[k] for k in evolucao_x]
 
-        estoque_por_cultivo_labels = []
-        estoque_por_cultivo_values = []
+        estoque_qs = StockEntry.objects.filter(cultivo__fazenda__produtor=user)
+        saldo_total = estoque_qs.aggregate(total=models.Sum('quantidade_kg')).get('total') or 0
+        estoque_total_kg = float(saldo_total or 0)
+
+        ofertas_total = Oferta.objects.filter(cultivo__fazenda__produtor=user, ativo=True).count()
+
+        estoque_por_cultivo = (
+            estoque_qs.values('cultivo__cultura')
+            .order_by()
+            .annotate(total=models.Sum('quantidade_kg'))
+        )
+        estoque_por_cultivo_labels = [row['cultivo__cultura'] or '' for row in estoque_por_cultivo]
+        estoque_por_cultivo_values = [float(row['total'] or 0) for row in estoque_por_cultivo]
 
         data = {
             'fazendas_total': fazendas_qs.count(),
             'cultivos_total': cultivos_qs.count(),
             'cultivos_ativos': ativos_qs.count(),
-            'estoque_total_kg': 0,
-            'ofertas_publicadas': 0,
+            'estoque_total_kg': estoque_total_kg,
+            'ofertas_publicadas': ofertas_total,
             'previsao_colheita': {
                 'dias_30': prev_30,
                 'dias_60': prev_60,

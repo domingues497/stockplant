@@ -8,6 +8,7 @@ export type OfertaPublica = {
   origem?: string;
   preco_kg: number;
   quantidade_kg: number;
+  imagem_url?: string;
   criado_em?: string;
 };
 
