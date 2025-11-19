@@ -11,8 +11,10 @@ class Command(BaseCommand):
     help = 'Cria dados de teste para fazendas e cultivos'
 
     def handle(self, *args, **kwargs):
-        produtor, created = User.objects.get_or_create(username='produtor_test', defaults={'email': 'produtor@test.com'})
-        if created:
+        alvo_email = 'domingues497@gmail.com'
+        produtor = User.objects.filter(email=alvo_email).first()
+        if not produtor:
+            produtor, _ = User.objects.get_or_create(username=alvo_email, defaults={'email': alvo_email})
             produtor.set_password('Test123!')
             produtor.save()
         UserRole.objects.update_or_create(user=produtor, defaults={'role': 'PRODUTOR'})
