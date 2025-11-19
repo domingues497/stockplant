@@ -62,9 +62,21 @@ class ProdutorDashboardView(APIView):
         d90 = hoje + timedelta(days=90)
 
         ativos_qs = cultivos_qs.filter(models.Q(data_prevista_colheita__isnull=True) | models.Q(data_prevista_colheita__gte=hoje))
-        prev_30 = cultivos_qs.filter(data_prevista_colheita__gte=hoje, data_prevista_colheita__lte=d30).count()
-        prev_60 = cultivos_qs.filter(data_prevista_colheita__gt=d30, data_prevista_colheita__lte=d60).count()
-        prev_90 = cultivos_qs.filter(data_prevista_colheita__gt=d60, data_prevista_colheita__lte=d90).count()
+        def kg_previstos(qs):
+            total = 0.0
+            for c in qs:
+                try:
+                    area = float(c.area_ha or 0)
+                    sacas = float(c.sacas_por_ha or 0)
+                    kg_saca = float(c.kg_por_saca or 60)
+                    total += area * sacas * kg_saca
+                except Exception:
+                    pass
+            return round(total, 2)
+
+        prev_30 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gte=hoje, data_prevista_colheita__lte=d30))
+        prev_60 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gt=d30, data_prevista_colheita__lte=d60))
+        prev_90 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gt=d60, data_prevista_colheita__lte=d90))
 
         area_por_cultura = (
             cultivos_qs.values('cultura')

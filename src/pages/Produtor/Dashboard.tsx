@@ -39,9 +39,9 @@ const ProdutorDashboard = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-4"><div className="text-sm">Previsão 30 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_30 ?? 0}</div></Card>
-        <Card className="p-4"><div className="text-sm">Previsão 60 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_60 ?? 0}</div></Card>
-        <Card className="p-4"><div className="text-sm">Previsão 90 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_90 ?? 0}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 30 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_30 ?? 0).toLocaleString()}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 60 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_60 ?? 0).toLocaleString()}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 90 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_90 ?? 0).toLocaleString()}</div></Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -61,6 +61,25 @@ const ProdutorDashboard = () => {
           <div className="mb-2 font-semibold">Estoque atual por cultivo</div>
           <div className="h-[300px]">
             <BarChart title="Estoque" x={data?.charts?.estoque_por_cultivo?.x || []} y={data?.charts?.estoque_por_cultivo?.y || []} />
+          </div>
+        </Card>
+        <Card className="p-4 h-[360px]">
+          <div className="mb-2 font-semibold">Cultivos por status (cultura/ano)</div>
+          <div className="h-[300px]">
+            <BarChart
+              title="Status"
+              x={data?.charts?.status_por_cultura_ano?.x || []}
+              y={(data?.charts?.status_por_cultura_ano?.series?.planejado || []).map(() => 0)}
+              series={
+                data?.charts?.status_por_cultura_ano
+                  ? [
+                      { name: "Planejado", y: data.charts.status_por_cultura_ano.series.planejado },
+                      { name: "Em desenvolvimento", y: data.charts.status_por_cultura_ano.series.em_desenvolvimento },
+                      { name: "Colhido", y: data.charts.status_por_cultura_ano.series.colhido },
+                    ]
+                  : []
+              }
+            />
           </div>
         </Card>
       </div>

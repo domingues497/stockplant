@@ -11,6 +11,7 @@ export type ProdutorDashboardData = {
     evolucao_producao_mensal: { x: Array<string>; y: Array<number> };
     area_por_cultura: { labels: Array<string>; values: Array<number> };
     estoque_por_cultivo: { x: Array<string>; y: Array<number> };
+    status_por_cultura_ano?: { x: Array<string>; series: { planejado: Array<number>; em_desenvolvimento: Array<number>; colhido: Array<number> } };
   };
 };
 
