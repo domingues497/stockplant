@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listFazendas, type Fazenda } from "@/services/api/farm";
-import { listCultivos, createCultivo, type Cultivo } from "@/services/api/cultivos";
+import { listCultivos, createCultivo, deleteCultivo, type Cultivo } from "@/services/api/cultivos";
 import { listEstoque, createEntradaEstoque } from "@/services/api/estoque";
 import { listCultivares, type Cultivar } from "@/services/api/cultivares";
+import { apiFetch } from "@/services/api/client";
 import { useToast } from "@/hooks/use-toast";
 import LineChart from "@/components/Charts/LineChart";
 import AreaChart from "@/components/Charts/AreaChart";
@@ -19,9 +20,10 @@ import { Link } from "react-router-dom";
 const Cultivos = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { data: fazendas = [], isLoading: loadingFaz } = useQuery({ queryKey: ["fazendas"], queryFn: listFazendas });
-  const { data: cultivos = [], isLoading: loadingCult } = useQuery({ queryKey: ["cultivos"], queryFn: listCultivos });
+  const { data: fazendas = [], isLoading: loadingFaz } = useQuery({ queryKey: ["fazendas"], queryFn: listFazendas, refetchOnWindowFocus: false });
+  const { data: cultivos = [], isLoading: loadingCult } = useQuery({ queryKey: ["cultivos"], queryFn: listCultivos, refetchOnWindowFocus: false });
   const { data: estoque } = useQuery({ queryKey: ["estoque"], queryFn: () => listEstoque(), refetchOnWindowFocus: false });
+  const { data: culturasInfo = [] } = useQuery<{ id:number; nome:string }[]>({ queryKey: ["culturas_info"], queryFn: async () => await apiFetch("/api/farm/culturas-info/"), refetchOnWindowFocus: false });
 
   const [selectedFazendaId, setSelectedFazendaId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -36,13 +38,32 @@ const Cultivos = () => {
   const [rainAgg, setRainAgg] = useState<"daily" | "weekly" | "monthly">("daily");
   const [cultivares, setCultivares] = useState<Cultivar[]>([]);
   const [rainMode, setRainMode] = useState<"annual" | "standard">("standard");
+  const [selectedCulturaInfoId, setSelectedCulturaInfoId] = useState<number | null>(null);
   useEffect(() => {
     let mounted = true;
-    listCultivares().then((rows) => { if (mounted) setCultivares(rows); }).catch(() => {});
+    if (selectedCulturaInfoId == null) { setCultivares([]); return () => { mounted = false; }; }
+    (async () => {
+      try {
+        const nome = (culturasInfo || []).find((c) => c.id === selectedCulturaInfoId)?.nome || "";
+        const [byId, byName] = await Promise.all([
+          listCultivares({ cultura_info_id: selectedCulturaInfoId }),
+          nome ? listCultivares({ cultura: nome }) : Promise.resolve([]),
+        ]);
+        const seen = new Set<string>();
+        const merged = [...byId, ...byName].filter((x) => {
+          const k = (x.variedade || "").toLowerCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        if (mounted) setCultivares(merged);
+      } catch {
+        if (mounted) setCultivares([]);
+      }
+    })();
     return () => { mounted = false; };
-  }, []);
-  const culturasList = useMemo(() => Array.from(new Set((cultivares || []).map((x) => x.cultura))), [cultivares]);
-  const variedadesList = useMemo(() => (form.cultura ? (cultivares || []).filter((x) => x.cultura.toLowerCase() === form.cultura.toLowerCase()).map((x) => x.variedade) : []), [cultivares, form.cultura]);
+  }, [selectedCulturaInfoId, culturasInfo]);
+  const variedadesList = useMemo(() => (selectedCulturaInfoId ? (cultivares || []).map((x) => x.variedade) : []), [cultivares, selectedCulturaInfoId]);
 
   useEffect(() => {
     if (selectedFazendaId === null) return;
@@ -224,15 +245,16 @@ const Cultivos = () => {
   };
 
   const onChange = (k: keyof Form, v: string) => {
-    if (k === "cultura") {
-      const key = v.trim().toLowerCase();
-      const def = KG_DEFAULTS[key];
-      if (def != null) {
-        setForm({ ...form, cultura: v, kg_por_saca: String(def) });
-        return;
+    setForm((prev) => {
+      if (k === "cultura") {
+        const key = v.trim().toLowerCase();
+        const def = KG_DEFAULTS[key];
+        if (def != null) {
+          return { ...prev, cultura: v, kg_por_saca: String(def) };
+        }
       }
-    }
-    setForm({ ...form, [k]: v });
+      return { ...prev, [k]: v };
+    });
   };
 
   const createMut = useMutation({
@@ -257,6 +279,17 @@ const Cultivos = () => {
       toast({ title: "Cultivo criado" });
     },
     onError: (e: any) => toast({ title: "Erro ao criar", description: e.message, variant: "destructive" }),
+  });
+
+  const excluirMut = useMutation({
+    mutationFn: async (id: number) => {
+      await deleteCultivo(id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cultivos"] });
+      toast({ title: "Cultivo excluído" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" }),
   });
 
   const filtered = useMemo(() => {
@@ -320,6 +353,37 @@ const Cultivos = () => {
     },
   });
 
+  const [entradaManualOpen, setEntradaManualOpen] = useState(false);
+  const [entradaManualQtd, setEntradaManualQtd] = useState<string>("");
+  const [cultivoEntrada, setCultivoEntrada] = useState<Cultivo | null>(null);
+  const mutEntradaManual = useMutation({
+    mutationFn: async () => {
+      if (!cultivoEntrada) throw new Error("Cultivo inválido");
+      const q = Number(entradaManualQtd);
+      if (!Number.isFinite(q) || q <= 0) throw new Error("Informe quantidade válida");
+      return createEntradaEstoque({ cultivo_id: cultivoEntrada.id, quantidade_kg: q, tipo: "colheita" });
+    },
+    onSuccess: () => {
+      setEntradaManualOpen(false);
+      setEntradaManualQtd("");
+      setCultivoEntrada(null);
+      qc.invalidateQueries({ queryKey: ["estoque"] });
+      toast({ title: "Colheita registrada no estoque" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao registrar colheita", description: String(e?.message || "") }),
+  });
+
+  const handleLancamento = (c: Cultivo) => {
+    const kg = kgEstimado(c);
+    if (kg == null || kg <= 0) {
+      setCultivoEntrada(c);
+      setEntradaManualQtd("");
+      setEntradaManualOpen(true);
+      return;
+    }
+    registrarMut.mutate(c);
+  };
+
   useEffect(() => {
     const all = cultivos || [];
     if (!all.length) return;
@@ -334,12 +398,15 @@ const Cultivos = () => {
       });
       if (toAuto.length) {
         const first = toAuto[0];
-        registrarMut.mutate(first, {
-          onSuccess: () => {
-            done[first.id] = true;
-            localStorage.setItem(key, JSON.stringify(done));
-          },
-        });
+        const kg = kgEstimado(first);
+        if (kg != null && kg > 0) {
+          registrarMut.mutate(first, {
+            onSuccess: () => {
+              done[first.id] = true;
+              localStorage.setItem(key, JSON.stringify(done));
+            },
+          });
+        }
       }
     } catch {}
   }, [cultivos, entradasMap]);
@@ -564,15 +631,29 @@ const Cultivos = () => {
                     <TableCell>{c.area != null && c.sacas_por_ha != null ? (((c.area || 0) * (c.sacas_por_ha || 0)) * (c.kg_por_saca || 60)).toLocaleString("pt-BR") : ""}</TableCell>
                     <TableCell>{status(c)}</TableCell>
                     <TableCell>
-                      {status(c) === "Colhido" ? (
-                        entradasMap.get(c.id)?.temColheita ? (
-                          <span className="text-sm text-muted-foreground">Já lançado</span>
+                      <div className="flex gap-2">
+                        {status(c) === "Colhido" ? (
+                          entradasMap.get(c.id)?.temColheita ? (
+                            <span className="text-sm text-muted-foreground">Já lançado</span>
+                          ) : (
+                            <Button size="sm" onClick={() => handleLancamento(c)} disabled={registrarMut.isPending}>Lançar no estoque</Button>
+                          )
                         ) : (
-                          <Button size="sm" onClick={() => registrarMut.mutate(c)} disabled={registrarMut.isPending}>Lançar no estoque</Button>
-                        )
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            if (window.confirm("Deseja realmente excluir este cultivo? Esta operação é irreversível.")) {
+                              excluirMut.mutate(c.id);
+                            }
+                          }}
+                          disabled={excluirMut.isPending}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -638,10 +719,20 @@ const Cultivos = () => {
             </div>
             <div className="space-y-2">
               <Label>Cultura</Label>
-              <select className="w-full border rounded h-9 px-2" value={form.cultura} onChange={(e) => onChange("cultura", e.target.value)}>
+              <select
+                className="w-full border rounded h-9 px-2"
+                value={selectedCulturaInfoId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value ? Number(e.target.value) : null;
+                  setSelectedCulturaInfoId(v);
+                  const nome = v != null ? (culturasInfo || []).find((c) => c.id === v)?.nome || "" : "";
+                  onChange("cultura", nome);
+                  onChange("variedade", "");
+                }}
+              >
                 <option value="">Selecione</option>
-                {culturasList.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {(culturasInfo || []).map((c) => (
+                  <option key={c.id} value={String(c.id)}>{c.nome}</option>
                 ))}
               </select>
             </div>
@@ -681,6 +772,24 @@ const Cultivos = () => {
           </div>
           <DialogFooter>
             <Button onClick={() => createMut.mutate()} disabled={createMut.isPending}>{createMut.isPending ? "Salvando..." : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={entradaManualOpen} onOpenChange={setEntradaManualOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Registrar colheita (manual)</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Quantidade (kg)</Label>
+              <Input type="number" min={0} step={0.01} value={entradaManualQtd} onChange={(e) => setEntradaManualQtd(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEntradaManualOpen(false)}>Cancelar</Button>
+            <Button onClick={() => mutEntradaManual.mutate()} disabled={mutEntradaManual.isPending || !cultivoEntrada}>Confirmar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,18 +1,27 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import models
-from .models import Fazenda, Cultivo, Cultivar
-from .serializers import FazendaSerializer, CultivoSerializer, CultivarSerializer
-from .permissions import IsProdutor, IsOwnerOrReadOnly
+from .models import Fazenda, Cultivo, Cultivar, CulturaInfo
+from .serializers import FazendaSerializer, CultivoSerializer, CultivarSerializer, CulturaInfoSerializer
+from .permissions import IsProdutor, IsOwnerOrReadOnly, IsAdmin
 from datetime import date, timedelta
 
 class FazendaViewSet(ModelViewSet):
     queryset = Fazenda.objects.all()
     serializer_class = FazendaSerializer
     permission_classes = [IsAuthenticated, IsProdutor, IsOwnerOrReadOnly]
+
+    def get_permissions(self):
+        try:
+            method = getattr(self.request, 'method', 'GET')
+        except Exception:
+            method = 'GET'
+        if method in ('GET','HEAD','OPTIONS'):
+            return [AllowAny()]
+        return [IsAuthenticated(), IsProdutor(), IsOwnerOrReadOnly()]
 
     def get_queryset(self):
         return Fazenda.objects.filter(produtor=self.request.user).order_by('-criado_em')
@@ -24,6 +33,15 @@ class CultivoViewSet(ModelViewSet):
     queryset = Cultivo.objects.all()
     serializer_class = CultivoSerializer
     permission_classes = [IsAuthenticated, IsProdutor]
+
+    def get_permissions(self):
+        try:
+            method = getattr(self.request, 'method', 'GET')
+        except Exception:
+            method = 'GET'
+        if method in ('GET','HEAD','OPTIONS'):
+            return [AllowAny()]
+        return [IsAuthenticated(), IsProdutor()]
 
     def get_queryset(self):
         return Cultivo.objects.filter(fazenda__produtor=self.request.user).order_by('-criado_em')
@@ -89,9 +107,26 @@ class CultivarViewSet(ModelViewSet):
     serializer_class = CultivarSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        try:
+            method = getattr(self.request, 'method', 'GET')
+        except Exception:
+            method = 'GET'
+        if method in ('GET','HEAD','OPTIONS'):
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
         qs = Cultivar.objects.all().order_by('cultura','variedade')
         cultura = self.request.query_params.get('cultura')
         if cultura:
             qs = qs.filter(cultura__iexact=cultura)
+        cultura_info_id = self.request.query_params.get('cultura_info_id')
+        if cultura_info_id:
+            qs = qs.filter(cultura_info_id=cultura_info_id)
         return qs
+
+class CulturaInfoViewSet(ModelViewSet):
+    queryset = CulturaInfo.objects.all()
+    serializer_class = CulturaInfoSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]

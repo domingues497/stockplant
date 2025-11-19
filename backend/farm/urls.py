@@ -1,10 +1,11 @@
 from rest_framework.routers import DefaultRouter
-from .views import FazendaViewSet, CultivoViewSet, CultivarViewSet
+from .views import FazendaViewSet, CultivoViewSet, CultivarViewSet, CulturaInfoViewSet
 
 router = DefaultRouter()
 router.register(r'fazendas', FazendaViewSet, basename='fazenda')
 router.register(r'cultivos', CultivoViewSet, basename='cultivo')
 router.register(r'cultivares', CultivarViewSet, basename='cultivar')
+router.register(r'culturas-info', CulturaInfoViewSet, basename='cultura_info')
 
 urlpatterns = router.urls
 

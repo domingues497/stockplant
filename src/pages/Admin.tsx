@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { adminCreateUser, adminListUsers, type UserRow } from "@/services/api/admin";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "@/services/api/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { authLogout } from "@/services/api/auth";
@@ -98,8 +100,9 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue={"usuarios"} className="w-full">
-        <TabsList className="grid w-full grid-cols-1">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+          <TabsTrigger value="culturas">Culturas</TabsTrigger>
         </TabsList>
 
         
@@ -115,8 +118,80 @@ export default function Admin() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="culturas">
+          <CulturasAdmin />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function CulturasAdmin() {
+  const qc = useQueryClient();
+  const { data: culturas = [] } = useQuery<{ id:number; nome:string; imagem_url:string }[]>({
+    queryKey: ["culturas_info"],
+    queryFn: async () => await apiFetch("/api/farm/culturas-info/"),
+    refetchOnWindowFocus: false,
+  });
+  const [nome, setNome] = useState("");
+  const [img, setImg] = useState("");
+
+  const create = async () => {
+    if (!nome.trim()) { toast.error("Informe o nome da cultura"); return; }
+    try {
+      await apiFetch("/api/farm/culturas-info/", { method: "POST", body: JSON.stringify({ nome, imagem_url: img }) });
+      setNome(""); setImg("");
+      qc.invalidateQueries({ queryKey: ["culturas_info"] });
+      toast.success("Cultura criada");
+    } catch (e) {
+      toast.error("Erro ao criar cultura");
+    }
+  };
+
+  const remove = async (id: number) => {
+    try {
+      await apiFetch(`/api/farm/culturas-info/${id}/`, { method: "DELETE" });
+      qc.invalidateQueries({ queryKey: ["culturas_info"] });
+    } catch (e) {
+      toast.error("Erro ao remover cultura");
+    }
+  };
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <Label>Nome da cultura</Label>
+          <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+        </div>
+        <div className="sm:col-span-2">
+          <Label>Imagem (URL)</Label>
+          <Input value={img} onChange={(e) => setImg(e.target.value)} placeholder="https://..." />
+        </div>
+      </div>
+      <div>
+        <Button onClick={create}>Criar cultura</Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {culturas.map((c) => (
+          <Card key={c.id} className="p-3 space-y-2">
+            {c.imagem_url && (
+              <div className="h-28 w-full bg-muted overflow-hidden rounded">
+                <img src={c.imagem_url} alt={c.nome} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">{c.nome}</div>
+              <Button variant="destructive" onClick={() => remove(c.id)}>Remover</Button>
+            </div>
+          </Card>
+        ))}
+        {culturas.length === 0 && (
+          <Card className="p-3"><div className="text-muted-foreground">Nenhuma cultura cadastrada</div></Card>
+        )}
+      </div>
+    </Card>
   );
 }
 

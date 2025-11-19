@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { listPublicOfertas, type OfertaPublica } from "@/services/api/marketplace";
+import { apiFetch } from "@/services/api/client";
 import { authLogout } from "@/services/api/auth";
 
 type Oferta = OfertaPublica;
@@ -35,6 +36,12 @@ export default function OfertasLanding() {
     return rows;
   }, [ofertasApi, busca, cultura, ordenar]);
 
+  const { data: culturasInfo = [] } = useQuery<{ id:number; nome:string; imagem_url:string }[]>({
+    queryKey: ["culturas_info"],
+    queryFn: async () => await apiFetch("/api/farm/culturas-info/"),
+    refetchOnWindowFocus: false,
+  });
+
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
@@ -45,6 +52,22 @@ export default function OfertasLanding() {
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => authLogout()}>Logout</Button>
         </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {culturasInfo.map((c) => (
+          <Card key={c.id} className="overflow-hidden">
+            {c.imagem_url && (
+              <div className="h-28 w-full bg-muted">
+                <img src={c.imagem_url} alt={c.nome} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="p-4 flex items-center justify-between">
+              <div className="font-semibold">{c.nome}</div>
+              <Button variant="outline" onClick={() => setCultura(c.nome)}>Ver ofertas</Button>
+            </div>
+          </Card>
+        ))}
       </div>
 
       <Card className="p-4">

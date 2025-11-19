@@ -2,6 +2,7 @@ from rest_framework import serializers
 from decimal import Decimal
 from django.db.models import Sum
 from .models import Fazenda, Cultivo, Cultivar
+from .models import CulturaInfo
 
 class FazendaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,7 +39,30 @@ class CultivoSerializer(serializers.ModelSerializer):
         ]
 
 class CultivarSerializer(serializers.ModelSerializer):
+    cultura_info_id = serializers.PrimaryKeyRelatedField(source='cultura_info', queryset=CulturaInfo.objects.all(), required=False, allow_null=True)
     class Meta:
         model = Cultivar
-        fields = ['id','cultura','variedade','criado_em']
+        fields = ['id','cultura','variedade','cultura_info_id','criado_em']
+
+    def create(self, validated_data):
+        cultura_info = validated_data.pop('cultura_info', None)
+        if cultura_info is not None:
+            validated_data['cultura'] = cultura_info.nome
+        instance = Cultivar.objects.create(cultura_info=cultura_info, **validated_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        cultura_info = validated_data.pop('cultura_info', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if cultura_info is not None:
+            instance.cultura_info = cultura_info
+            instance.cultura = cultura_info.nome
+        instance.save()
+        return instance
+
+class CulturaInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CulturaInfo
+        fields = ['id','nome','imagem_url','criado_em']
 

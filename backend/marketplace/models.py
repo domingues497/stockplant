@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Oferta(models.Model):
+    cultivo = models.ForeignKey('farm.Cultivo', on_delete=models.CASCADE, null=True, blank=True, related_name='ofertas')
     cultura = models.CharField(max_length=100)
     variedade = models.CharField(max_length=100, blank=True)
     origem = models.CharField(max_length=255, blank=True)

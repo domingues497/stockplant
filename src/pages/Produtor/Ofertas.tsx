@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { apiFetch } from "@/services/api/client";
 
 export default function Ofertas() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: estoque } = useQuery({ queryKey: ["estoque"], queryFn: () => listEstoque(), refetchOnWindowFocus: false });
   const { data: cultivos } = useQuery<Cultivo[]>({ queryKey: ["cultivos"], queryFn: () => listCultivos(), refetchOnWindowFocus: false });
 
@@ -23,7 +24,7 @@ export default function Ofertas() {
     queryKey: ["ofertas_produtor"],
     queryFn: async () => {
       try {
-        const rows = await apiFetch("/api/produtor/ofertas/");
+        const rows = await apiFetch("/api/marketplace/ofertas/");
         return (rows as any[]).map((r) => ({
           id: Number(r.id),
           cultura: String(r.cultura || r.cultivo || ""),
@@ -110,25 +111,46 @@ export default function Ofertas() {
       toast({ title: "Quantidade excede estoque disponível", description: `Saldo: ${s.toLocaleString()} kg` });
       return;
     }
-    toast({ title: editingId ? "Oferta atualizada" : "Oferta criada" });
-    setOpen(false);
+    (async () => {
+      try {
+        const body = {
+          cultivo_id: cultivoId,
+          cultura: String(cultivoSel?.cultura || ""),
+          variedade: String(cultivoSel?.variedade || ""),
+          quantidade_kg: quantidadeNum,
+          preco_kg: Number(preco) || 0,
+        };
+        await apiFetch("/api/marketplace/ofertas/", {
+          method: editingId ? "PATCH" : "POST",
+          body: JSON.stringify(editingId ? { id: editingId, ...body } : body),
+        });
+        toast({ title: editingId ? "Oferta atualizada" : "Oferta criada" });
+        setOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["ofertas_produtor"] });
+      } catch (e) {
+        toast({ title: "Erro ao salvar oferta", description: String(e) });
+      }
+    })();
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Ofertas</h1>
+    <div className="p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Nova Oferta</h1>
+        <div className="flex gap-2">
+          <Button onClick={startCreate}>Nova oferta</Button>
+          <Link to="/produtor/dashboard"><Button variant="outline">Voltar</Button></Link>  
+        </div>
+      </div>
+
       <Card className="p-4 space-y-4">
         <div className="flex items-center justify-between">
+                 
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Estoque disponível</p>
             <p className="text-2xl font-semibold">{saldo.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={startCreate}>Nova oferta</Button>
-            <Button variant="outline" onClick={() => startEdit(1)}>Editar oferta</Button>
-            <Link to="/produtor/dashboard"><Button variant="outline">Voltar</Button></Link>
-           
-          </div>
+
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {saldoPorCultura.map(([culturaNome, kg]) => (

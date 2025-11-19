@@ -100,31 +100,40 @@ export default function Marketplace() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {ofertas.map((o) => (
-            <Card key={o.id} className="p-4">
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">
-                    {o.cultura}{o.variedade ? ` • ${o.variedade}` : ""}
-                  </div>
-                  <div className="text-sm text-muted-foreground">{o.origem ?? ""}</div>
+          {ofertas.map((o) => {
+            const kgPorSaca = 60;
+            const precoSc = o.preco_kg * kgPorSaca;
+            const qtdSc = o.quantidade_kg / kgPorSaca;
+            return (
+              <Card key={o.id} className="p-0 overflow-hidden">
+                <div className="h-36 w-full bg-muted">
+                  <img src={"https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800"} alt={o.cultura} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Preço</div>
-                    <div className="text-xl font-semibold">R$ {o.preco_kg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/kg</div>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">
+                      {o.cultura}{o.variedade ? ` • ${o.variedade}` : ""}
+                    </div>
+                    <div className="text-sm text-muted-foreground">{o.origem ?? ""}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-muted-foreground">Disponível</div>
-                    <div className="text-xl font-semibold">{o.quantidade_kg.toLocaleString()} kg</div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Preço</div>
+                      <div className="text-2xl font-semibold text-green-600">R$ {precoSc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                      <div className="text-xs text-muted-foreground">por sc</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground">Disponível</div>
+                      <div className="text-xl font-semibold">{Math.floor(qtdSc).toLocaleString()} sc</div>
+                    </div>
                   </div>
-                </div>
-                <Button onClick={() => add({ ofertaId: o.id, nome: o.cultura, quantidade: 1, preco: o.preco_kg })} className="w-full">
-                  Adicionar ao carrinho
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <Button onClick={() => add({ ofertaId: o.id, nome: `${o.cultura}${o.variedade ? ` • ${o.variedade}` : ""}`, quantidade: 1, preco: precoSc })} className="w-full">
+                    Adicionar ao carrinho
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

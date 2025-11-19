@@ -14,3 +14,14 @@ class IsOwnerOrReadOnly(BasePermission):
             return True
         return getattr(obj, 'produtor', None) == request.user
 
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        try:
+            role = getattr(getattr(user, 'role', None), 'role', None)
+        except Exception:
+            role = None
+        return user.is_superuser or role == 'ADMIN'
+

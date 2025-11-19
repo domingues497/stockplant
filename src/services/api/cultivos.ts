@@ -32,17 +32,17 @@ export async function listCultivos(): Promise<Cultivo[]> {
 }
 
 export async function createCultivo(payload: Omit<Cultivo, "id" | "criado_em">): Promise<Cultivo> {
-  const body = {
+  const body: Record<string, any> = {
     fazenda: payload.fazenda_id,
     cultura: payload.cultura,
     variedade: payload.variedade ?? "",
-    area_ha: payload.area ?? null,
     data_plantio: payload.data_plantio,
-    data_prevista_colheita: payload.data_prevista_colheita ?? null,
-    safra: payload.safra ?? "",
-    sacas_por_ha: payload.sacas_por_ha ?? null,
-    kg_por_saca: payload.kg_por_saca ?? null,
   };
+  if (payload.area != null) body.area_ha = payload.area;
+  if (payload.data_prevista_colheita) body.data_prevista_colheita = payload.data_prevista_colheita;
+  if (payload.safra) body.safra = payload.safra;
+  if (payload.sacas_por_ha != null) body.sacas_por_ha = payload.sacas_por_ha;
+  body.kg_por_saca = payload.kg_por_saca != null ? payload.kg_por_saca : 60;
   const r = await apiFetch("/api/farm/cultivos/", {
     method: "POST",
     body: JSON.stringify(body),
@@ -60,4 +60,8 @@ export async function createCultivo(payload: Omit<Cultivo, "id" | "criado_em">):
     kg_por_saca: r.kg_por_saca != null ? Number(r.kg_por_saca) : null,
     criado_em: r.criado_em,
   } as Cultivo;
+}
+
+export async function deleteCultivo(id: number): Promise<void> {
+  await apiFetch(`/api/farm/cultivos/${id}/`, { method: "DELETE" });
 }

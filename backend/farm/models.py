@@ -34,6 +34,7 @@ class Cultivo(models.Model):
 class Cultivar(models.Model):
     cultura = models.CharField(max_length=100)
     variedade = models.CharField(max_length=100)
+    cultura_info = models.ForeignKey('CulturaInfo', on_delete=models.SET_NULL, null=True, blank=True, related_name='cultivares')
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -41,3 +42,14 @@ class Cultivar(models.Model):
 
     def __str__(self):
         return f"{self.cultura} - {self.variedade}"
+
+class CulturaInfo(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+    imagem_url = models.URLField(blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["nome"]
+
+    def __str__(self):
+        return self.nome
