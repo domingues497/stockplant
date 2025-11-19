@@ -39,9 +39,9 @@ const ProdutorDashboard = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-4"><div className="text-sm">Previsão 30 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_30 ?? 0).toLocaleString()}</div></Card>
-        <Card className="p-4"><div className="text-sm">Previsão 60 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_60 ?? 0).toLocaleString()}</div></Card>
-        <Card className="p-4"><div className="text-sm">Previsão 90 dias (kg)</div><div className="text-2xl font-bold">{isLoading ? "..." : (data?.previsao_colheita?.dias_90 ?? 0).toLocaleString()}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 30 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_30 ?? 0}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 60 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_60 ?? 0}</div></Card>
+        <Card className="p-4"><div className="text-sm">Previsão 90 dias</div><div className="text-2xl font-bold">{isLoading ? "..." : data?.previsao_colheita?.dias_90 ?? 0}</div></Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

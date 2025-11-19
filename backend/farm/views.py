@@ -57,26 +57,15 @@ class ProdutorDashboardView(APIView):
         cultivos_qs = Cultivo.objects.filter(fazenda__produtor=user)
 
         hoje = date.today()
+        d29 = hoje + timedelta(days=29)
         d30 = hoje + timedelta(days=30)
-        d60 = hoje + timedelta(days=60)
+        d89 = hoje + timedelta(days=89)
         d90 = hoje + timedelta(days=90)
 
         ativos_qs = cultivos_qs.filter(models.Q(data_prevista_colheita__isnull=True) | models.Q(data_prevista_colheita__gte=hoje))
-        def kg_previstos(qs):
-            total = 0.0
-            for c in qs:
-                try:
-                    area = float(c.area_ha or 0)
-                    sacas = float(c.sacas_por_ha or 0)
-                    kg_saca = float(c.kg_por_saca or 60)
-                    total += area * sacas * kg_saca
-                except Exception:
-                    pass
-            return round(total, 2)
-
-        prev_30 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gte=hoje, data_prevista_colheita__lte=d30))
-        prev_60 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gt=d30, data_prevista_colheita__lte=d60))
-        prev_90 = kg_previstos(cultivos_qs.filter(data_prevista_colheita__gt=d60, data_prevista_colheita__lte=d90))
+        prev_30 = cultivos_qs.filter(data_prevista_colheita__gte=hoje, data_prevista_colheita__lte=d29).count()
+        prev_60 = cultivos_qs.filter(data_prevista_colheita__gte=d30, data_prevista_colheita__lte=d89).count()
+        prev_90 = cultivos_qs.filter(data_prevista_colheita__gte=d90).count()
 
         area_por_cultura = (
             cultivos_qs.values('cultura')
@@ -125,18 +114,18 @@ class ProdutorDashboardView(APIView):
                 ano = hoje_dt.year
             label = f"{cultura} {ano}"
             # determinar status
-            status = 'Em desenvolvimento'
+            status_label = 'Em desenvolvimento'
             try:
                 if c.data_prevista_colheita and hoje_dt > c.data_prevista_colheita:
-                    status = 'Colhido'
+                    status_label = 'Colhido'
                 elif c.data_plantio and hoje_dt < c.data_plantio:
-                    status = 'Planejado'
+                    status_label = 'Planejado'
                 else:
-                    status = 'Em desenvolvimento'
+                    status_label = 'Em desenvolvimento'
             except Exception:
-                status = 'Em desenvolvimento'
+                status_label = 'Em desenvolvimento'
             d = cats.setdefault(label, {'Planejado': 0, 'Em desenvolvimento': 0, 'Colhido': 0})
-            d[status] = d.get(status, 0) + 1
+            d[status_label] = d.get(status_label, 0) + 1
 
         status_labels = sorted(cats.keys())
         planejado = [cats[k]['Planejado'] for k in status_labels]

@@ -24,7 +24,7 @@ export default function Ofertas() {
     queryKey: ["ofertas_produtor"],
     queryFn: async () => {
       try {
-        const rows = await apiFetch("/api/marketplace/ofertas/");
+        const rows = await apiFetch("/api/marketplace/minhas-ofertas/");
         return (rows as any[]).map((r) => ({
           id: Number(r.id),
           cultura: String(r.cultura || r.cultivo || ""),
@@ -120,7 +120,7 @@ export default function Ofertas() {
           quantidade_kg: quantidadeNum,
           preco_kg: Number(preco) || 0,
         };
-        await apiFetch("/api/marketplace/ofertas/", {
+        await apiFetch("/api/marketplace/minhas-ofertas/", {
           method: editingId ? "PATCH" : "POST",
           body: JSON.stringify(editingId ? { id: editingId, ...body } : body),
         });

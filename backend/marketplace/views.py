@@ -38,7 +38,9 @@ class MinhasOfertasView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
     def get_permissions(self):
-        if getattr(self.request, 'method', 'GET') == 'POST':
+        # Exige autenticação e papel Produtor para GET/POST/PATCH
+        method = getattr(self.request, 'method', 'GET')
+        if method in ('GET', 'POST', 'PATCH'):
             return [IsAuthenticated(), IsProdutor()]
         return [AllowAny()]
 
@@ -80,3 +82,31 @@ class MinhasOfertasView(APIView):
         )
         data = OfertaSerializer(oferta).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request):
+        try:
+            oferta_id = int(request.data.get('id'))
+        except Exception:
+            return Response({'detail': 'ID inválido'}, status=status.HTTP_400_BAD_REQUEST)
+
+        oferta = Oferta.objects.select_related('cultivo__fazenda').filter(pk=oferta_id, cultivo__fazenda__produtor=request.user).first()
+        if not oferta:
+            return Response({'detail': 'Oferta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+        preco_kg = request.data.get('preco_kg')
+        quantidade_kg = request.data.get('quantidade_kg')
+        ativo = request.data.get('ativo')
+
+        try:
+            if preco_kg is not None:
+                oferta.preco_kg = Decimal(str(preco_kg))
+            if quantidade_kg is not None:
+                oferta.quantidade_kg = Decimal(str(quantidade_kg))
+            if ativo is not None:
+                oferta.ativo = bool(ativo)
+            oferta.save()
+        except Exception:
+            return Response({'detail': 'Parâmetros inválidos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = OfertaSerializer(oferta).data
+        return Response(data, status=status.HTTP_200_OK)
