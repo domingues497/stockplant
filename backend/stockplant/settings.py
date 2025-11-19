@@ -169,3 +169,6 @@ else:
             'http://localhost:5175',
             'http://127.0.0.1:5175',
         ]
+
+# Integrations
+SIGMAABC_SECRET = os.getenv('SIGMAABC_SECRET') or ''

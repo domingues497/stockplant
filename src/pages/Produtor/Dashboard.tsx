@@ -7,6 +7,8 @@ import BarChart from "@/components/Charts/BarChart";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { authLogout } from "@/services/api/auth";
+import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/services/api/client";
 
 const ProdutorDashboard = () => {
   const { data, isLoading } = useQuery({
@@ -16,6 +18,19 @@ const ProdutorDashboard = () => {
     refetchOnReconnect: true,
     refetchOnMount: "always",
   });
+  const { toast } = useToast();
+
+  const openSigmaABC = async () => {
+    try {
+      const params = new URLSearchParams({ identificador: String(10988), categoria: String(1), exp: String(3600) });
+      const body = await apiFetch(`/api/integrations/sigmaabc/logar/?${params.toString()}`);
+      const url = String(body?.url || "");
+      if (!url) throw new Error("URL inválida");
+      window.open(url, "_blank");
+    } catch (e: any) {
+      toast({ title: "Erro ao acessar SigmaABC", description: e.message || String(e), variant: "destructive" });
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -27,6 +42,7 @@ const ProdutorDashboard = () => {
           <Link to="/produtor/estoque"><Button variant="outline">Estoque</Button></Link>
           <Link to="/produtor/ofertas"><Button variant="outline">Ofertas</Button></Link>
           <Link to="/produtor/relatorios"><Button variant="outline">Relatórios</Button></Link>
+          <Button onClick={openSigmaABC}>Acessar SigmaABC</Button>
           <Button variant="destructive" onClick={() => authLogout()}>Logout</Button>
         </div>
       </div>

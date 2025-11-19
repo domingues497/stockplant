@@ -27,5 +27,6 @@ urlpatterns = [
     path('api/farm/', include('farm.urls')),
     path('api/marketplace/', include('marketplace.urls')),
     path('api/', include('stockapp.urls')),
+    path('api/integrations/', include('integrations.urls')),
     path('api/produtor/dashboard/', ProdutorDashboardView.as_view()),
 ]
