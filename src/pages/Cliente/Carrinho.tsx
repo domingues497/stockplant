@@ -1,4 +1,5 @@
 import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, MapPin, User } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -10,10 +11,12 @@ import { authLogout } from "@/services/api/auth";
 export default function Carrinho() {
   const navigate = useNavigate();
   const { items, remove, updateQty, clear } = useCart();
+  const [processing, setProcessing] = useState(false);
 
   const total = items.reduce((acc, it) => acc + it.quantidade * it.preco, 0);
 
   const handleCheckout = () => {
+    if (processing) return;
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     if (!token) {
       toast({ title: "Login necessário", description: "Entre na sua conta para finalizar a compra.", variant: "destructive" });
@@ -28,13 +31,20 @@ export default function Carrinho() {
       });
       return;
     }
-
-    toast({
-      title: "Pedido realizado com sucesso!",
-      description: "Você receberá um email com os detalhes da compra.",
-    });
-    clear();
-    navigate("/cliente/marketplace");
+    setProcessing(true);
+    toast({ title: "Aguarde finalizando o seu pedido" });
+    setTimeout(() => {
+      toast({ title: "Validando seu pedido" });
+      setTimeout(() => {
+        toast({ title: "Finalizando o seu pedido" });
+        setTimeout(() => {
+          toast({ title: "Pedido realizado com sucesso!", description: "Você receberá um email com os detalhes da compra." });
+          clear();
+          navigate("/cliente/marketplace");
+          setProcessing(false);
+        }, 500);
+      }, 3000);
+    }, 5000);
   };
 
   const handleClearCart = () => {
@@ -161,7 +171,7 @@ export default function Carrinho() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button onClick={handleCheckout} className="w-full" size="lg">Finalizar Compra</Button>
+                  <Button onClick={handleCheckout} className="w-full" size="lg" disabled={processing}>{processing ? "Processando..." : "Finalizar Compra"}</Button>
                 </CardFooter>
               </Card>
             </div>

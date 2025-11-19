@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingCart, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listPublicOfertas, type OfertaPublica } from "@/services/api/marketplace";
 import { authLogout } from "@/services/api/auth";
+import { useUserRole } from "@/hooks/useUserRole";
 
  
 
@@ -32,6 +33,11 @@ export default function Marketplace() {
   });
 
   const itemCount = items.reduce((acc, it) => acc + it.quantidade, 0);
+  const [isLogged, setIsLogged] = useState<boolean>(typeof window !== "undefined" ? !!localStorage.getItem("access_token") : false);
+  useEffect(() => {
+    setIsLogged(typeof window !== "undefined" ? !!localStorage.getItem("access_token") : false);
+  }, []);
+  const { data: roleData } = useUserRole();
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,7 +56,14 @@ export default function Marketplace() {
                   <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">{itemCount}</Badge>
                 )}
               </Button>
-              <Button onClick={() => navigate("/auth")} variant="default">Login</Button>
+              {isLogged && roleData?.role === "CLIENTE" && (
+                <Button variant="outline" onClick={() => navigate("/cliente/historico")}>Minhas compras</Button>
+              )}
+              {isLogged ? (
+                <Button onClick={() => authLogout()} variant="outline">Logout</Button>
+              ) : (
+                <Button onClick={() => navigate("/auth")} variant="default">Login</Button>
+              )}
              
             </div>
             
