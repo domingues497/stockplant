@@ -1,3 +1,4 @@
+p82GZWdFe7hJPC9rEbND4aH3kXmjBtAs
 BEGIN;
 INSERT INTO "accounts_userrole" ("id","role","user_id") VALUES (1,'ADMIN',1);
 INSERT INTO "accounts_userrole" ("id","role","user_id") VALUES (3,'CLIENTE',3);
