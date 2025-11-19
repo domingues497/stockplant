@@ -29,6 +29,14 @@ class PublicOfertasView(APIView):
         data = OfertaSerializer(qs, many=True).data
         return Response(data, status=status.HTTP_200_OK)
 
+class MinhasOfertasView(APIView):
+    permission_classes = [IsAuthenticated, IsProdutor]
+
+    def get(self, request):
+        qs = Oferta.objects.filter(cultivo__fazenda__produtor=request.user)
+        data = OfertaSerializer(qs, many=True).data
+        return Response(data, status=status.HTTP_200_OK)
+
     def get_permissions(self):
         if getattr(self.request, 'method', 'GET') == 'POST':
             return [IsAuthenticated(), IsProdutor()]

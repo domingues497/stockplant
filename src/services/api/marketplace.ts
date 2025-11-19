@@ -2,6 +2,7 @@ import { apiFetch } from "./client";
 
 export type OfertaPublica = {
   id: number;
+  cultivo_id?: number | null;
   cultura: string;
   variedade?: string;
   origem?: string;
@@ -18,4 +19,8 @@ export async function listPublicOfertas(params?: { cultura?: string; q?: string;
   const qs = search.toString();
   const path = "/api/marketplace/ofertas/" + (qs ? `?${qs}` : "");
   return apiFetch(path);
+}
+
+export async function listMinhasOfertas(): Promise<OfertaPublica[]> {
+  return apiFetch("/api/marketplace/minhas-ofertas/");
 }

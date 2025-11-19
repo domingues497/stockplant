@@ -4,6 +4,8 @@ from decimal import Decimal
 from datetime import date, timedelta
 from accounts.models import UserRole
 from farm.models import Fazenda, Cultivo, Cultivar
+from stockapp.models import StockEntry
+from marketplace.models import Oferta
 
 class Command(BaseCommand):
     help = 'Cria dados de teste para fazendas e cultivos'
@@ -167,3 +169,38 @@ class Command(BaseCommand):
         for cultura, variedade in lista_cultivares:
             Cultivar.objects.get_or_create(cultura=cultura, variedade=variedade)
         self.stdout.write(self.style.SUCCESS('Cultivares padrão populados'))
+
+        # Cria entradas de estoque e ofertas básicas para testes
+        cultivos_produtor = Cultivo.objects.filter(fazenda__produtor=produtor).order_by('id')
+        created_estoque = 0
+        created_ofertas = 0
+        for i, c in enumerate(cultivos_produtor[:10]):
+            try:
+                # Entrada de colheita, apenas se data prevista já passou
+                if c.data_prevista_colheita and c.data_prevista_colheita <= date.today():
+                    if not StockEntry.objects.filter(cultivo=c, tipo='colheita').exists():
+                        qty = (c.area_ha or Decimal('0')) * (c.sacas_por_ha or Decimal('0')) * (c.kg_por_saca or Decimal('60'))
+                        qty = qty if qty > 0 else Decimal('1000')
+                        StockEntry.objects.create(cultivo=c, quantidade_kg=qty, tipo='colheita', observacao='Seed colheita')
+                        created_estoque += 1
+                # Ajuste simples
+                if not StockEntry.objects.filter(cultivo=c, tipo='ajuste').exists():
+                    StockEntry.objects.create(cultivo=c, quantidade_kg=Decimal('250'), tipo='ajuste', observacao='Seed ajuste')
+                    created_estoque += 1
+                # Oferta vinculada
+                if not Oferta.objects.filter(cultivo=c).exists():
+                    Oferta.objects.create(
+                        cultivo=c,
+                        cultura=c.cultura or '',
+                        variedade=c.variedade or '',
+                        origem=c.fazenda.nome,
+                        preco_kg=Decimal('2.50') + Decimal(str((i % 5) * 0.10)),
+                        quantidade_kg=Decimal('500.00'),
+                        ativo=True,
+                    )
+                    created_ofertas += 1
+            except Exception:
+                # Continua sem travar o seed
+                pass
+        self.stdout.write(self.style.SUCCESS(f'Entradas de estoque criadas: {created_estoque}'))
+        self.stdout.write(self.style.SUCCESS(f'Ofertas criadas: {created_ofertas}'))
