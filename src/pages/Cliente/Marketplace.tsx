@@ -43,20 +43,17 @@ export default function Marketplace() {
               <p className="text-sm text-muted-foreground">Marketplace Agrícola</p>
             </div>
             <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/auth")} variant="default">
-              Login
-            </Button>
-            <Button onClick={() => authLogout()} variant="outline">
-              Logout
-            </Button>
-            <Button onClick={() => navigate("/cliente/carrinho")} variant="outline" className="relative">
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Carrinho
-              {itemCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">{itemCount}</Badge>
-              )}
-            </Button>
+              <Button onClick={() => navigate("/cliente/carrinho")} variant="outline" className="relative">
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Carrinho
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">{itemCount}</Badge>
+                )}
+              </Button>
+              <Button onClick={() => navigate("/auth")} variant="default">Login</Button>
+             
             </div>
+            
           </div>
         </div>
       </header>
