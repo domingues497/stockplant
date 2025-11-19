@@ -96,6 +96,41 @@ class ProdutorDashboardView(APIView):
         estoque_por_cultivo_labels = [row['cultivo__cultura'] or '' for row in estoque_por_cultivo]
         estoque_por_cultivo_values = [float(row['total'] or 0) for row in estoque_por_cultivo]
 
+        # Status por cultura/ano
+        hoje_dt = date.today()
+        cats: dict[str, dict[str, int]] = {}
+        for c in cultivos_qs:
+            cultura = c.cultura or ''
+            ano = None
+            try:
+                if c.data_plantio:
+                    ano = c.data_plantio.year
+                elif c.data_prevista_colheita:
+                    ano = c.data_prevista_colheita.year
+            except Exception:
+                ano = None
+            if ano is None:
+                ano = hoje_dt.year
+            label = f"{cultura} {ano}"
+            # determinar status
+            status = 'Em desenvolvimento'
+            try:
+                if c.data_prevista_colheita and hoje_dt > c.data_prevista_colheita:
+                    status = 'Colhido'
+                elif c.data_plantio and hoje_dt < c.data_plantio:
+                    status = 'Planejado'
+                else:
+                    status = 'Em desenvolvimento'
+            except Exception:
+                status = 'Em desenvolvimento'
+            d = cats.setdefault(label, {'Planejado': 0, 'Em desenvolvimento': 0, 'Colhido': 0})
+            d[status] = d.get(status, 0) + 1
+
+        status_labels = sorted(cats.keys())
+        planejado = [cats[k]['Planejado'] for k in status_labels]
+        emdes = [cats[k]['Em desenvolvimento'] for k in status_labels]
+        colhido = [cats[k]['Colhido'] for k in status_labels]
+
         data = {
             'fazendas_total': fazendas_qs.count(),
             'cultivos_total': cultivos_qs.count(),
@@ -111,6 +146,7 @@ class ProdutorDashboardView(APIView):
                 'evolucao_producao_mensal': { 'x': evolucao_x, 'y': evolucao_y },
                 'area_por_cultura': { 'labels': labels_area, 'values': values_area },
                 'estoque_por_cultivo': { 'x': estoque_por_cultivo_labels, 'y': estoque_por_cultivo_values },
+                'status_por_cultura_ano': { 'x': status_labels, 'series': { 'planejado': planejado, 'em_desenvolvimento': emdes, 'colhido': colhido } },
             }
         }
         return Response(data, status=status.HTTP_200_OK)
@@ -143,3 +179,12 @@ class CulturaInfoViewSet(ModelViewSet):
     queryset = CulturaInfo.objects.all()
     serializer_class = CulturaInfoSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get_permissions(self):
+        try:
+            method = getattr(self.request, 'method', 'GET')
+        except Exception:
+            method = 'GET'
+        if method in ('GET','HEAD','OPTIONS'):
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdmin()]
